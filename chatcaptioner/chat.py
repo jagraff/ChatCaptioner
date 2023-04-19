@@ -357,13 +357,19 @@ def caption_image(blip2, image, model, n_rounds=10, n_blip2_context=-1, print_mo
 
     return results
 
+GIF_SYSTEM_QUESTION = "I have a GIF that I would like to caption. " \
+                      "Each individual frame will be captioned by an image captioning model, and I want you to combine all of the frames' captions into a single caption describing the whole GIF. \n"
+
+GIF_SUB_QUESTION = "What is a caption that describes the full GIF, given the captions for each of the frames? Don't worry about perfect accuracy, just come up with the best caption you can given the captions provided. All of the captions come from the same gif, regardless of how different they seem."
 
 def caption_gif(blip2, gif_path, tags, model, n_rounds=10, n_blip2_context=-1, print_mode='no',
                 question=QUESTION_INSTRUCTION,
                 sub_question=SUB_QUESTION_INSTRUCTION,
                 summary=SUMMARY_INSTRUCTION,
                 answer=ANSWER_INSTRUCTION,
-                first_question=FIRST_QUESTION):
+                first_question=FIRST_QUESTION,
+                gif_system_question=GIF_SYSTEM_QUESTION,
+                gif_sub_question=GIF_SUB_QUESTION):
     if model == 'gpt3':
         model = 'text-davinci-003'
     elif model == 'chatgpt':
@@ -405,9 +411,6 @@ def caption_gif(blip2, gif_path, tags, model, n_rounds=10, n_blip2_context=-1, p
 
         all_results.append(results)
 
-    system_prompt = "I have a GIF that I would like to caption. " \
-                     "Each individual frame will be captioned by an image captioning model, and I want you to combine all of the frames' captions into a single caption describing the whole GIF. \n"
-
     questions = []
     answers = []
     for i, result in enumerate(all_results):
@@ -417,8 +420,7 @@ def caption_gif(blip2, gif_path, tags, model, n_rounds=10, n_blip2_context=-1, p
         questions.append(question)
         answers.append(answer)
 
-    sub_prompt = "What is a caption that describes the full GIF, given the captions for each of the frames? Don't worry about perfect accuracy, just come up with the best caption you can given the captions provided. All of the captions come from the same gif, regardless of how different they seem."
-    messages = prepare_chatgpt_message(system_prompt, questions, answers, sub_prompt)
+    messages = prepare_chatgpt_message(gif_system_question, questions, answers, gif_sub_question)
 
     final_answer = call_chatgpt(messages, max_tokens=500)
 
