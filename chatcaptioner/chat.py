@@ -135,6 +135,7 @@ class AskQuestions():
                  sub_question=SUB_QUESTION_INSTRUCTION,
                  summary=SUMMARY_INSTRUCTION,
                  answer=ANSWER_INSTRUCTION,
+                 sub_answer=SUB_ANSWER_INSTRUCTION,
                  first_question=FIRST_QUESTION
                  ):
         self.img = img
@@ -147,6 +148,7 @@ class AskQuestions():
         self.sub_question = sub_question
         self.summary = summary
         self.answer = answer
+        self.sub_answer = sub_answer
         self.first_question = first_question
 
         self.questions = []
