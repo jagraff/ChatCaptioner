@@ -378,29 +378,51 @@ def caption_gif(blip2, gif_path, tags, model, n_rounds=10, n_blip2_context=-1, p
 
     image = frames[int(len(frames)/2)]
 
-    results = {}
-    chat = AskQuestions(image,
-                        blip2,
-                        n_blip2_context=n_blip2_context,
-                        model=model,
-                        tags=tags,
-                        question=question,
-                        sub_question=sub_question,
-                        summary=summary,
-                        answer=answer,
-                        first_question=first_question)
+    all_results = []
 
-    questions, answers, n_token_chat = chat.chatting(n_rounds+len(tags), print_mode=print_mode)
+    for image in frames:
+        results = {}
+        chat = AskQuestions(image,
+                            blip2,
+                            n_blip2_context=n_blip2_context,
+                            model=model,
+                            tags=tags,
+                            question=question,
+                            sub_question=sub_question,
+                            summary=summary,
+                            answer=answer,
+                            first_question=first_question)
 
-    summary, summary_prompt, n_token_sum = chat.summarize()
-    results['ChatCaptioner'] = {'caption': summary, 'chat': summary_prompt, 'n_token': n_token_chat + n_token_sum}
-    results['BLIP2+OurPrompt'] = {'caption': answers[0]}
+        questions, answers, n_token_chat = chat.chatting(n_rounds+len(tags), print_mode=print_mode)
 
-    # Default BLIP2 caption
-    caption = blip2.caption(image)
-    results['BLIP2'] = {'caption': caption}
+        summary, summary_prompt, n_token_sum = chat.summarize()
+        results['ChatCaptioner'] = {'caption': summary, 'chat': summary_prompt, 'n_token': n_token_chat + n_token_sum}
+        results['BLIP2+OurPrompt'] = {'caption': answers[0]}
 
-    return results
+        # Default BLIP2 caption
+        caption = blip2.caption(image)
+        results['BLIP2'] = {'caption': caption}
+
+        all_results.append(results)
+
+    system_prompt = "I have a GIF that I would like to caption. " \
+                     "Each individual frame will be captioned by an image captioning model, and I want you to combine all of the frames' captions into a single caption describing the whole GIF. \n"
+
+    questions = []
+    answers = []
+    for i, result in enumerate(all_results):
+        caption = result['ChatCaptioner']['caption']
+        question = f"What is the content of frame number {i}? "
+        answer = f"The caption of frame number {i} is \"{caption}\". "
+        questions.append(question)
+        answers.append(answer)
+
+    sub_prompt = "What is a caption that describes the full GIF, given the captions for each of the frames? Don't worry about perfect accuracy, just come up with the best caption you can given the captions provided. All of the captions come from the same gif, regardless of how different they seem."
+    messages = prepare_chatgpt_message(system_prompt, questions, answers, sub_prompt)
+
+    final_answer = call_chatgpt(messages, max_tokens=500)
+
+    return all_results, final_answer
 
 
 def caption_images(blip2s, dataset, img_ids, model, save_path='', n_rounds=10, n_blip2_context=-1, print_mode='no'):
