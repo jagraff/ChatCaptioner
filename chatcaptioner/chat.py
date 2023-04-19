@@ -265,14 +265,14 @@ class AskQuestions():
     def summarize(self):
         if self.model in VALID_GPT3_MODELS:
             summary_prompt = prepare_gpt_prompt(
-                        self.quetion,
+                        self.question,
                         self.questions, self.answers,
                         self.summary
                     )
             summary, n_tokens = call_gpt3(summary_prompt, model=self.model, max_tokens=self.max_gpt_token)
         elif self.model in VALID_CHATGPT_MODELS:
             summary_prompt = prepare_chatgpt_message(
-                        self.quetion,
+                        self.question,
                         self.questions, self.answers,
                         self.summary
                     )
@@ -411,7 +411,7 @@ def caption_images(blip2s, dataset, img_ids, model, save_path='', n_rounds=10, n
         blip2s (dict): A dict of blip2 models. Key is the blip2 model name
         dataset: the dataset used to caption
         img_ids (list): a list of image ids in the dataset used to caption
-        model (str or Blip2): the model name used to ask quetion. Valid values are 'gpt3', 'chatgpt', and their concrete model names 
+        model (str or Blip2): the model name used to ask question. Valid values are 'gpt3', 'chatgpt', and their concrete model names 
                     including 'text-davinci-003', 'davinci,' and 'gpt-3.5-turbo'.
                     If passing a Blip2 instance, will use its backend LLM.
         save_path (str): the path to save caption results. If it is empty, results are not being saved.
